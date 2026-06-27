@@ -26,6 +26,46 @@ const App: React.FC = () => {
   const [setupConfig, setSetupConfig] = useState<AdventureConfig | null>(null);
   const [audioState, setAudioState] = useState<'suspended' | 'running' | 'closed'>('suspended');
 
+  // Fullscreen premium mode support
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [lastTap, setLastTap] = useState(0);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
+    };
+  }, []);
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(err => {
+        console.warn("Fullscreen request failed:", err);
+      });
+    } else {
+      document.exitFullscreen().catch(err => {
+        console.warn("Exit fullscreen failed:", err);
+      });
+    }
+  };
+
+  const handleTouchStart = () => {
+    const now = Date.now();
+    if (now - lastTap < 300) {
+      toggleFullscreen();
+    }
+    setLastTap(now);
+  };
+
   // Interviewee specific state
   const [currentJob, setCurrentJob] = useState(() => {
     const locked = localStorage.getItem('storyscape_current_job_locked') === 'true';
@@ -249,7 +289,24 @@ const App: React.FC = () => {
     return renderHome();
   };
 
-  return <div className="min-h-screen bg-[#0a0a0a]">{renderContent()}</div>;
+  return (
+    <div className="min-h-screen bg-[#0a0a0a]" onTouchStart={handleTouchStart}>
+      {/* Premium Floating Full Screen Controls */}
+      <div className="fixed top-4 right-4 z-50 flex items-center gap-2">
+        <button
+          onClick={toggleFullscreen}
+          className="p-3 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all text-white/70 hover:text-white flex items-center justify-center gap-1.5 backdrop-blur-md shadow-2xl group active:scale-90"
+          title={isFullscreen ? "Exit Fullscreen (Esc)" : "Go Fullscreen (Double-Tap screen on Mobile)"}
+        >
+          <i className={`fas ${isFullscreen ? 'fa-compress text-amber-400' : 'fa-expand text-indigo-400'} text-xs`}></i>
+          <span className="text-[9px] font-black uppercase tracking-widest max-w-0 overflow-hidden group-hover:max-w-[120px] transition-all duration-300 ease-out whitespace-nowrap pl-0 group-hover:pl-1">
+            {isFullscreen ? 'Exit Full' : 'Full Screen'}
+          </span>
+        </button>
+      </div>
+      {renderContent()}
+    </div>
+  );
 };
 
 interface SetupViewProps {
