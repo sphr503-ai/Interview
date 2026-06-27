@@ -1,0 +1,10 @@
+{
+  "name": "Remix: Perfect ui Copy of StoryScape 2.0",
+  "description": "Interactive AI-powered audio adventures. Pick a genre, type your choices, and let the narrator weave an infinite tale with real-time voice interaction.",
+  "requestFramePermissions": [
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
