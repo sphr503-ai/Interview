@@ -27,8 +27,20 @@ const App: React.FC = () => {
   const [audioState, setAudioState] = useState<'suspended' | 'running' | 'closed'>('suspended');
 
   // Interviewee specific state
-  const [currentJob, setCurrentJob] = useState('React developer with 2 years of frontend experience');
-  const [appliedJob, setAppliedJob] = useState('Senior Frontend Engineer with strong focus on architecture and React 19');
+  const [currentJob, setCurrentJob] = useState(() => {
+    const locked = localStorage.getItem('storyscape_current_job_locked') === 'true';
+    if (locked) {
+      return localStorage.getItem('storyscape_current_job') || 'React developer with 2 years of frontend experience';
+    }
+    return 'React developer with 2 years of frontend experience';
+  });
+  const [appliedJob, setAppliedJob] = useState(() => {
+    const locked = localStorage.getItem('storyscape_applied_job_locked') === 'true';
+    if (locked) {
+      return localStorage.getItem('storyscape_applied_job') || 'Senior Frontend Engineer with strong focus on architecture and React 19';
+    }
+    return 'Senior Frontend Engineer with strong focus on architecture and React 19';
+  });
   const [answerLength, setAnswerLength] = useState<'short' | 'detailed'>('detailed');
 
   useEffect(() => {
@@ -357,10 +369,67 @@ const SetupView: React.FC<SetupViewProps> = ({ genre, category, origin, onBack, 
   const [mode, setMode] = useState<NarratorMode>(NarratorMode.SINGLE);
   const [duration, setDuration] = useState(15);
 
-  // Local interviewee state fields
-  const [localCurrentJob, setLocalCurrentJob] = useState('React developer with 2 years of frontend experience');
-  const [localAppliedJob, setLocalAppliedJob] = useState('Senior Frontend Engineer with strong focus on architecture and React 19');
+  // Local interviewee state fields with lock persistence
+  const [currentJobLocked, setCurrentJobLocked] = useState(() => {
+    return localStorage.getItem('storyscape_current_job_locked') === 'true';
+  });
+  const [appliedJobLocked, setAppliedJobLocked] = useState(() => {
+    return localStorage.getItem('storyscape_applied_job_locked') === 'true';
+  });
+
+  const [localCurrentJob, setLocalCurrentJob] = useState(() => {
+    const locked = localStorage.getItem('storyscape_current_job_locked') === 'true';
+    if (locked) {
+      return localStorage.getItem('storyscape_current_job') || 'React developer with 2 years of frontend experience';
+    }
+    return 'React developer with 2 years of frontend experience';
+  });
+
+  const [localAppliedJob, setLocalAppliedJob] = useState(() => {
+    const locked = localStorage.getItem('storyscape_applied_job_locked') === 'true';
+    if (locked) {
+      return localStorage.getItem('storyscape_applied_job') || 'Senior Frontend Engineer with strong focus on architecture and React 19';
+    }
+    return 'Senior Frontend Engineer with strong focus on architecture and React 19';
+  });
+
   const [localAnswerLen, setLocalAnswerLen] = useState<'short' | 'detailed'>('detailed');
+
+  const toggleCurrentJobLock = () => {
+    const nextVal = !currentJobLocked;
+    setCurrentJobLocked(nextVal);
+    localStorage.setItem('storyscape_current_job_locked', String(nextVal));
+    if (nextVal) {
+      localStorage.setItem('storyscape_current_job', localCurrentJob);
+    }
+  };
+
+  const toggleAppliedJobLock = () => {
+    const nextVal = !appliedJobLocked;
+    setAppliedJobLocked(nextVal);
+    localStorage.setItem('storyscape_applied_job_locked', String(nextVal));
+    if (nextVal) {
+      localStorage.setItem('storyscape_applied_job', localAppliedJob);
+    }
+  };
+
+  const handleCurrentJobChange = (val: string) => {
+    setLocalCurrentJob(val);
+    if (currentJobLocked) {
+      if (val.trim()) {
+        localStorage.setItem('storyscape_current_job', val);
+      }
+    }
+  };
+
+  const handleAppliedJobChange = (val: string) => {
+    setLocalAppliedJob(val);
+    if (appliedJobLocked) {
+      if (val.trim()) {
+        localStorage.setItem('storyscape_applied_job', val);
+      }
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center p-6 bg-[#0a0a0a] relative">
@@ -382,10 +451,32 @@ const SetupView: React.FC<SetupViewProps> = ({ genre, category, origin, onBack, 
           {origin === 'interviewee' ? (
             <>
               <div className="space-y-2">
-                <label className="text-[10px] uppercase font-black opacity-40 ml-2 tracking-widest">Current Job / Background Description</label>
+                <div className="flex items-center justify-between px-2">
+                  <label className="text-[10px] uppercase font-black opacity-40 tracking-widest">Current Job / Background Description</label>
+                  <button
+                    type="button"
+                    onClick={toggleCurrentJobLock}
+                    className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${
+                      currentJobLocked
+                        ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30 shadow-[0_0_10px_rgba(245,158,11,0.05)]'
+                        : 'bg-white/5 text-white/30 border border-white/5 hover:text-white/60 hover:bg-white/10'
+                    }`}
+                    title={currentJobLocked ? "Locked to database" : "Lock to database"}
+                  >
+                    {currentJobLocked ? (
+                      <>
+                        <i className="fas fa-lock text-[8px]"></i> Locked 🔒
+                      </>
+                    ) : (
+                      <>
+                        <i className="fas fa-unlock text-[8px]"></i> Unlocked 🔓
+                      </>
+                    )}
+                  </button>
+                </div>
                 <textarea 
                   value={localCurrentJob} 
-                  onChange={e => setLocalCurrentJob(e.target.value)}
+                  onChange={e => handleCurrentJobChange(e.target.value)}
                   placeholder="E.g. Software Engineer with 3 years of React experience..."
                   rows={3}
                   className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 outline-none focus:border-white/30 transition-all text-sm resize-none text-white"
@@ -393,10 +484,32 @@ const SetupView: React.FC<SetupViewProps> = ({ genre, category, origin, onBack, 
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] uppercase font-black opacity-40 ml-2 tracking-widest">Target Job / Applied Job Description</label>
+                <div className="flex items-center justify-between px-2">
+                  <label className="text-[10px] uppercase font-black opacity-40 tracking-widest">Target Job / Applied Job Description</label>
+                  <button
+                    type="button"
+                    onClick={toggleAppliedJobLock}
+                    className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${
+                      appliedJobLocked
+                        ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30 shadow-[0_0_10px_rgba(245,158,11,0.05)]'
+                        : 'bg-white/5 text-white/30 border border-white/5 hover:text-white/60 hover:bg-white/10'
+                    }`}
+                    title={appliedJobLocked ? "Locked to database" : "Lock to database"}
+                  >
+                    {appliedJobLocked ? (
+                      <>
+                        <i className="fas fa-lock text-[8px]"></i> Locked 🔒
+                      </>
+                    ) : (
+                      <>
+                        <i className="fas fa-unlock text-[8px]"></i> Unlocked 🔓
+                      </>
+                    )}
+                  </button>
+                </div>
                 <textarea 
                   value={localAppliedJob} 
-                  onChange={e => setLocalAppliedJob(e.target.value)}
+                  onChange={e => handleAppliedJobChange(e.target.value)}
                   placeholder="E.g. Senior Frontend developer role requiring Node.js and cloud systems..."
                   rows={3}
                   className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 outline-none focus:border-white/30 transition-all text-sm resize-none text-white"
