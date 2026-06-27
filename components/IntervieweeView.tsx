@@ -17,6 +17,7 @@ interface IntervieweeViewProps {
   voice: GeminiVoice;
   category: string;
   onExit: () => void;
+  onToggleFullscreen?: () => void;
   initialHistory?: Array<{ role: 'user' | 'model'; text: string }>;
 }
 
@@ -82,6 +83,7 @@ const IntervieweeView: React.FC<IntervieweeViewProps> = ({
   voice,
   category,
   onExit,
+  onToggleFullscreen,
   initialHistory = [],
 }) => {
   const [transcriptions, setTranscriptions] = useState<Array<{ role: 'user' | 'model'; text: string; time?: string }>>(() => {
@@ -108,6 +110,15 @@ const IntervieweeView: React.FC<IntervieweeViewProps> = ({
   const [connectingProgress, setConnectingProgress] = useState(0);
 
   const [showFinishConfirmation, setShowFinishConfirmation] = useState(false);
+  const [headerLastTap, setHeaderLastTap] = useState(0);
+
+  const handleHeaderTouchStart = () => {
+    const now = Date.now();
+    if (now - headerLastTap < 300) {
+      onToggleFullscreen?.();
+    }
+    setHeaderLastTap(now);
+  };
   const [isEvaluating, setIsEvaluating] = useState(false);
   const [evaluation, setEvaluation] = useState<string | null>(null);
   
@@ -432,7 +443,12 @@ Provide feedback for the interviewer (the user) on how they conducted the interv
         <div className="flex-1 flex flex-col h-full overflow-hidden relative min-w-0">
           
           {/* APK Style Top Chat Header */}
-          <div className="px-6 py-4 border-b border-white/5 bg-slate-950/70 flex items-center justify-between z-20">
+          <div 
+            onDoubleClick={onToggleFullscreen}
+            onTouchStart={handleHeaderTouchStart}
+            className="px-6 py-4 border-b border-white/5 bg-slate-950/70 flex items-center justify-between z-20 cursor-pointer select-none"
+            title="Double-click or double-tap header to toggle Full Screen"
+          >
             <div className="flex items-center gap-3 min-w-0">
               <button 
                 onClick={onExit}

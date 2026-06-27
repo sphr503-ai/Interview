@@ -167,7 +167,18 @@ const App: React.FC = () => {
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-500/10 blur-[120px] rounded-full"></div>
 
       <div className="max-w-6xl w-full text-center z-10 pt-12 md:pt-20">
-        <h1 className="text-6xl md:text-8xl font-black mb-4 tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-white via-white to-white/40">
+        <h1 
+          onDoubleClick={toggleFullscreen}
+          onTouchStart={(e) => {
+            const now = Date.now();
+            if (now - lastTap < 300) {
+              toggleFullscreen();
+            }
+            setLastTap(now);
+          }}
+          className="text-6xl md:text-8xl font-black mb-4 tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-white via-white to-white/40 cursor-pointer select-none"
+          title="Double-click or double-tap to toggle Full Screen"
+        >
           Growthify
         </h1>
         <p className="text-xl md:text-2xl text-white/50 mb-16 max-w-2xl mx-auto font-light">
@@ -218,6 +229,7 @@ const App: React.FC = () => {
           category={selectedCategory}
           origin="interviewee" 
           onBack={() => setViewMode(ViewMode.HOME)} 
+          onToggleFullscreen={toggleFullscreen}
           onConfirm={(config, extra) => {
             if (extra) {
               setCurrentJob(extra.currentJob);
@@ -234,7 +246,7 @@ const App: React.FC = () => {
       );
     }
     if (!selectedGenre) return null;
-    return <SetupView genre={selectedGenre} origin={sessionOrigin || 'adventures'} onBack={() => setViewMode(ViewMode.HOME)} onConfirm={finalizeSetup} />;
+    return <SetupView genre={selectedGenre} origin={sessionOrigin || 'adventures'} onBack={() => setViewMode(ViewMode.HOME)} onToggleFullscreen={toggleFullscreen} onConfirm={finalizeSetup} />;
   };
 
   const renderContent = () => {
@@ -257,6 +269,7 @@ const App: React.FC = () => {
               setSessionOrigin(null);
               setSelectedCategory(null);
             }} 
+            onToggleFullscreen={toggleFullscreen}
           />
         );
       }
@@ -291,8 +304,8 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a]" onTouchStart={handleTouchStart}>
-      {/* Premium Floating Full Screen Controls */}
-      <div className="fixed top-4 right-4 z-50 flex items-center gap-2">
+      {/* Premium Floating Full Screen Controls - Hidden on Mobile */}
+      <div className="fixed top-4 right-4 z-50 md:flex hidden items-center gap-2">
         <button
           onClick={toggleFullscreen}
           className="p-3 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all text-white/70 hover:text-white flex items-center justify-center gap-1.5 backdrop-blur-md shadow-2xl group active:scale-90"
@@ -314,6 +327,7 @@ interface SetupViewProps {
   category?: string;
   origin: 'adventures' | 'files' | 'interviewee';
   onBack: () => void;
+  onToggleFullscreen?: () => void;
   onConfirm: (
     config: AdventureConfig, 
     extra?: { 
@@ -327,12 +341,13 @@ interface SetupViewProps {
   ) => void;
 }
 
-const SetupView: React.FC<SetupViewProps> = ({ genre, category, origin, onBack, onConfirm }) => {
+const SetupView: React.FC<SetupViewProps> = ({ genre, category, origin, onBack, onToggleFullscreen, onConfirm }) => {
   const [topic, setTopic] = useState('');
   const [language, setLanguage] = useState('English');
   const [voice, setVoice] = useState<GeminiVoice>('Zephyr');
   const [mode, setMode] = useState<NarratorMode>(NarratorMode.SINGLE);
   const [duration, setDuration] = useState(15);
+  const [lastExitTap, setLastExitTap] = useState(0);
 
   // Local interviewee state fields with lock persistence
   const [currentJobLocked, setCurrentJobLocked] = useState(() => {
@@ -662,7 +677,21 @@ const SetupView: React.FC<SetupViewProps> = ({ genre, category, origin, onBack, 
         </div>
 
         <div className="flex gap-4 pt-4">
-          <button onClick={onBack} className="flex-1 py-5 rounded-3xl bg-white/5 border border-white/10 text-xs font-black uppercase tracking-widest hover:bg-white/10 transition-all text-white">Back</button>
+          <button 
+            onClick={onBack} 
+            onDoubleClick={onToggleFullscreen}
+            onTouchStart={() => {
+              const now = Date.now();
+              if (now - lastExitTap < 300) {
+                onToggleFullscreen?.();
+              }
+              setLastExitTap(now);
+            }}
+            title="Double-click or double-tap to toggle Full Screen"
+            className="flex-1 py-5 rounded-3xl bg-white/5 border border-white/10 text-xs font-black uppercase tracking-widest hover:bg-white/10 transition-all text-white"
+          >
+            Back
+          </button>
           <button 
             onClick={() => onConfirm(
               { genre: genre || Genre.SCIFI, topic, language, voice, mode, durationMinutes: origin === 'files' ? duration : undefined },
