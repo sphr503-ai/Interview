@@ -77,6 +77,7 @@ const AdventureView: React.FC<AdventureViewProps> = ({ config, onExit, initialHi
   const serviceRef = useRef<StoryScapeService | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const ambientAudioRef = useRef<HTMLAudioElement | null>(null);
+  const hasErrorRef = useRef(false);
 
   const currentModelTextRef = useRef('');
   const currentUserTextRef = useRef('');
@@ -162,8 +163,16 @@ const AdventureView: React.FC<AdventureViewProps> = ({ config, onExit, initialHi
           updateUserText('');
         }
       },
-      onError: (err) => setError(String(err)),
-      onClose: () => onExit(),
+      onError: (err) => {
+        console.error("Gemini Live Error:", err);
+        hasErrorRef.current = true;
+        setError(String(err));
+      },
+      onClose: () => {
+        if (!hasErrorRef.current) {
+          onExit();
+        }
+      },
     }, transcriptions).then(() => {
       setConnectingProgress(100);
       setAnalysers({ in: service.inputAnalyser, out: service.outputAnalyser });
@@ -342,7 +351,34 @@ const AdventureView: React.FC<AdventureViewProps> = ({ config, onExit, initialHi
       <main className="flex-1 flex flex-col max-w-5xl mx-auto w-full glass rounded-[2.5rem] overflow-hidden shadow-2xl relative border-white/10 z-10 bg-black/10">
         <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 md:p-12 space-y-10 scroll-smooth custom-scrollbar relative">
           
-          {connectingProgress < 100 && (
+          {error && (
+            <div className="absolute inset-0 bg-[#080a10]/98 backdrop-blur-md z-50 flex flex-col items-center justify-center p-6 text-center overflow-y-auto">
+               <div className="w-16 h-16 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-500 mb-4 animate-bounce">
+                 <i className="fas fa-circle-exclamation text-2xl"></i>
+               </div>
+               <h3 className="text-xl font-bold text-white mb-2">Connection Blocked</h3>
+               <p className="text-xs text-slate-400 max-w-md leading-relaxed mb-6 text-center">
+                 {error.includes("apiKey") || error.includes("API key") || error.includes("403") || error.includes("400") || error.toLowerCase().includes("key") || error.toLowerCase().includes("unauthorized")
+                   ? "The connection to Google Gemini was closed because the API Key is invalid, missing, or blocked. Please make sure you have added a valid GEMINI_API_KEY environment variable to your Vercel deployment."
+                   : `An error occurred while connecting to the candidate model: ${error}`}
+               </p>
+               <div className="bg-white/5 border border-white/10 rounded-2xl p-4 mb-6 max-w-md text-left text-[11px] font-mono text-slate-400 space-y-2">
+                 <p className="font-semibold text-indigo-400">💡 How to Fix on Vercel:</p>
+                 <ol className="list-decimal list-inside space-y-1">
+                   <li>Go to your Vercel Project Dashboard</li>
+                   <li>Navigate to <b>Settings</b> &gt; <b>Environment Variables</b></li>
+                   <li>Add <b>GEMINI_API_KEY</b> as the Name</li>
+                   <li>Paste your Google AI Studio API key as the Value</li>
+                   <li>Redeploy your project for the changes to take effect!</li>
+                 </ol>
+               </div>
+               <button onClick={onExit} className="px-8 py-3 bg-white text-black font-bold uppercase tracking-widest text-[10px] rounded-full hover:scale-105 transition-all">
+                 Back to Home
+               </button>
+            </div>
+          )}
+
+          {connectingProgress < 100 && !error && (
             <div className="absolute inset-0 bg-black/40 backdrop-blur-sm z-50 flex flex-col items-center justify-center gap-6">
                <div className="relative">
                  <div className="w-32 h-32 border-4 border-white/5 border-t-white rounded-full animate-spin"></div>
