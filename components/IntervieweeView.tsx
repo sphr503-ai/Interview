@@ -10,6 +10,9 @@ interface IntervieweeViewProps {
   currentJobDescription: string;
   appliedJobDescription: string;
   answerLength: 'short' | 'detailed';
+  englishLevel: 'easy' | 'normal' | 'fluent';
+  currentSalary: string;
+  expectedSalary: string;
   language: string;
   voice: GeminiVoice;
   category: string;
@@ -72,6 +75,9 @@ const IntervieweeView: React.FC<IntervieweeViewProps> = ({
   currentJobDescription,
   appliedJobDescription,
   answerLength,
+  englishLevel,
+  currentSalary,
+  expectedSalary,
   language,
   voice,
   category,
@@ -174,6 +180,16 @@ const IntervieweeView: React.FC<IntervieweeViewProps> = ({
       ? 'Your responses must be realistic, highly concise, and strictly brief: between 2 and 5 lines of text when written down.'
       : 'Your responses must be realistic, detailed, comprehensive, and thorough: between 5 and 10 lines of text when written down.';
 
+    const levelInstruction = englishLevel === 'easy'
+      ? 'You must speak using simple, easy English words, simple sentence structures, and a clear, highly accessible vocabulary suitable for beginner-level speakers.'
+      : englishLevel === 'fluent'
+        ? 'You must speak using sophisticated, fluent, eloquent English words, rich and advanced sentence structures, and an extensive professional vocabulary.'
+        : 'You must speak using normal, natural, standard professional English words, common phrasing, and clear standard business vocabulary.';
+
+    const salaryInstruction = (currentSalary.trim() || expectedSalary.trim())
+      ? `Additionally, your current salary is ${currentSalary || 'not specified'} and your expected salary for this target role is ${expectedSalary || 'not specified'}. You should actively but professionally negotiate your salary, benefits, and compensation when appropriate or when asked by the interviewer, keeping your expectation of ${expectedSalary || 'not specified'} in mind.`
+      : '';
+
     const systemInstruction = `You are playing the role of a job Candidate (Interviewee) in a highly realistic mock interview session.
 Your background and experience are defined by the following Current Job Description:
 "${currentJobDescription}"
@@ -184,10 +200,18 @@ You are applying for a job with the following Applied Job Description:
 The category of this interview session is: ${category}.
 The user is your Interviewer. They will ask you questions (technical, behavioral, situational, or general) to evaluate your candidacy.
 You must respond as the Candidate. Stay in character at all times.
+
 Your response length constraint:
 ${lengthInstruction}
 
-Respond naturally, as a human candidate would in a live interview. Keep your tone professional, confident, polite, and realistic. Always tailor your answers to showcase how your background (Current Job Description) translates perfectly into the target role (Applied Job Description). Respond exclusively in the chosen language: ${language}.`;
+Your English speaking style and vocabulary requirement:
+${levelInstruction}
+
+Your compensation and salary expectation:
+${salaryInstruction}
+
+Respond naturally, authentically, and conversationally, exactly like a genuine human candidate would in a live interview. 
+CRITICAL: Do NOT mention your target role, applied job title, or current job title verbatim in every response as it sounds extremely robotic and repetitive. Only relate your current background to the applied job position when the interviewer's question explicitly asks you to do so, or when it fits perfectly and organically into the context of the question. Keep your tone professional, confident, polite, candid, and highly realistic. Respond exclusively in the chosen language: ${language}.`;
 
     const config = {
       genre: Genre.SCIFI,
@@ -364,11 +388,14 @@ Respond naturally, as a human candidate would in a live interview. Keep your ton
       
 Candidate's Background (Current Job): ${currentJobDescription}
 Target Role (Applied Job): ${appliedJobDescription}
+Candidate's English Vocabulary Style: ${englishLevel}
+Current Salary: ${currentSalary}
+Expected Salary: ${expectedSalary}
 
 Interview Transcript:
 ${transcript}
 
-Provide feedback for the interviewer (the user) on how they conducted the interview, and offer a short evaluation of the candidate's performance. Keep it elegant, well-spaced, highly professional, and inspiring. Add bullet points for clear readability.`;
+Provide feedback for the interviewer (the user) on how they conducted the interview, and offer a detailed evaluation of the candidate's performance. Comment on their responses, their English vocabulary style (easy, normal, or fluent), and how professionally they negotiated or discussed compensation relative to their expected salary of ${expectedSalary}. Keep it elegant, well-spaced, highly professional, and inspiring. Add bullet points for clear readability.`;
 
       const response = await ai.models.generateContent({
         model: 'gemini-3.5-flash',
@@ -808,7 +835,7 @@ Provide feedback for the interviewer (the user) on how they conducted the interv
 
             {/* Footer metadata panel */}
             <div className="p-4 border-t border-white/5 bg-slate-950/60 text-center">
-              <span className="text-[8px] opacity-40 uppercase tracking-widest font-mono">STORYSCAPE INTERVIEW AGENT v2.0</span>
+              <span className="text-[8px] opacity-40 uppercase tracking-widest font-mono">GROWTHIFY INTERVIEW AGENT v2.0</span>
             </div>
           </div>
         )}

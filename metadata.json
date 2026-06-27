@@ -1,6 +1,6 @@
 {
-  "name": "Remix: Perfect ui Copy of StoryScape 2.0",
-  "description": "Interactive AI-powered audio adventures. Pick a genre, type your choices, and let the narrator weave an infinite tale with real-time voice interaction.",
+  "name": "Growthify",
+  "description": "An interactive AI-powered job mock interview simulator with real-time voice, lockable job description persistence, and customizable interview categories.",
   "requestFramePermissions": [
     "microphone"
   ],

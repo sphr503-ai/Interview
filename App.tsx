@@ -19,7 +19,7 @@ const VOICES: Array<{ id: GeminiVoice; name: string; description: string }> = [
 
 const App: React.FC = () => {
   const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.HOME);
-  const [activeTab, setActiveTab] = useState<'adventures' | 'files' | 'interviewee'>('adventures');
+  const [activeTab, setActiveTab] = useState<'adventures' | 'files' | 'interviewee'>('interviewee');
   const [sessionOrigin, setSessionOrigin] = useState<'adventures' | 'files' | 'interviewee' | null>(null);
   const [selectedGenre, setSelectedGenre] = useState<Genre | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -42,6 +42,9 @@ const App: React.FC = () => {
     return 'Senior Frontend Engineer with strong focus on architecture and React 19';
   });
   const [answerLength, setAnswerLength] = useState<'short' | 'detailed'>('detailed');
+  const [englishLevel, setEnglishLevel] = useState<'easy' | 'normal' | 'fluent'>('normal');
+  const [currentSalary, setCurrentSalary] = useState('$80,000 / year');
+  const [expectedSalary, setExpectedSalary] = useState('$110,000 / year');
 
   useEffect(() => {
     let active = true;
@@ -124,151 +127,43 @@ const App: React.FC = () => {
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-500/10 blur-[120px] rounded-full"></div>
 
       <div className="max-w-6xl w-full text-center z-10 pt-12 md:pt-20">
-        <div className="flex flex-col items-center gap-6 mb-12">
-          <div className="flex items-center gap-4 px-6 py-2.5 glass rounded-full shadow-2xl border-white/5">
-            <div className={`flex items-center gap-2 pr-4 border-r border-white/10`}>
-              <div className={`w-2.5 h-2.5 rounded-full ${audioState === 'running' ? 'bg-green-500 shadow-[0_0_10px_#22c55e]' : 'bg-red-500 animate-pulse shadow-[0_0_10_px_#ef4444]'}`}></div>
-              <span className={`text-[10px] font-black uppercase tracking-[0.3em] ${audioState === 'running' ? 'text-green-400' : 'text-red-400'}`}>
-                {audioState === 'running' ? 'Audio Signal Active' : 'Sound Engine Blocked'}
-              </span>
-            </div>
-            <button onClick={handleFixAudio} className="text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-white transition-colors flex items-center gap-2">
-              <i className="fas fa-bolt text-xs text-yellow-500"></i> Fix Audio
-            </button>
-          </div>
-        </div>
-
         <h1 className="text-6xl md:text-8xl font-black mb-4 tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-white via-white to-white/40">
-          STORYSCAPE
+          Growthify
         </h1>
-        <p className="text-xl md:text-2xl text-white/50 mb-12 max-w-2xl mx-auto font-light">
-          {activeTab === 'adventures' 
-            ? 'Live Interactive Saga Engine.' 
-            : activeTab === 'interviewee'
-              ? 'Real-Time Simulated Job Candidate Room.'
-              : 'Archived Chronology & Deep Narratives.'}
+        <p className="text-xl md:text-2xl text-white/50 mb-16 max-w-2xl mx-auto font-light">
+          Real-Time Simulated Job Candidate Room.
         </p>
-
-        {/* Tab Navigation */}
-        <div className="flex justify-center mb-16">
-          <div className="glass p-1.5 rounded-full flex gap-1 border-white/5 shadow-2xl">
-            <button 
-              onClick={() => setActiveTab('adventures')}
-              className={`px-6 md:px-10 py-3 rounded-full text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300 ${activeTab === 'adventures' ? 'bg-white text-black shadow-lg' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
-            >
-              Adventures
-            </button>
-            <button 
-              onClick={() => setActiveTab('interviewee')}
-              className={`px-6 md:px-10 py-3 rounded-full text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300 ${activeTab === 'interviewee' ? 'bg-white text-black shadow-lg' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
-            >
-              Interviewee
-            </button>
-            <button 
-              onClick={() => setActiveTab('files')}
-              className={`px-6 md:px-10 py-3 rounded-full text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300 ${activeTab === 'files' ? 'bg-white text-black shadow-lg' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
-            >
-              Story Files
-            </button>
-          </div>
-        </div>
 
         {/* Dynamic Genre Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          {activeTab === 'adventures' ? (
-            <>
-              <GenreCard 
-                genre={Genre.FANTASY} 
-                icon="fa-dragon" 
-                desc="Magic and ancient quests."
-                color="hover:border-amber-500/50"
-                onStart={() => handleStartSetup(Genre.FANTASY)}
-              />
-              <GenreCard 
-                genre={Genre.SCIFI} 
-                icon="fa-user-astronaut" 
-                desc="Futuristic dystopias."
-                color="hover:border-cyan-500/50"
-                onStart={() => handleStartSetup(Genre.SCIFI)}
-              />
-              <GenreCard 
-                genre={Genre.MYSTERY} 
-                icon="fa-magnifying-glass" 
-                desc="Hidden truths."
-                color="hover:border-purple-500/50"
-                onStart={() => handleStartSetup(Genre.MYSTERY)}
-              />
-              <GenreCard 
-                genre={Genre.HORROR} 
-                icon="fa-ghost" 
-                desc="Psychological thrills."
-                color="hover:border-red-500/50"
-                onStart={() => handleStartSetup(Genre.HORROR)}
-              />
-            </>
-          ) : activeTab === 'interviewee' ? (
-            <>
-              <CategoryCard 
-                category="Technical Prep" 
-                icon="fa-laptop-code" 
-                desc="Diving deep into code, system design, and algorithms."
-                color="hover:border-indigo-500/50"
-                onStart={() => handleStartSetupInterview("Technical Prep")}
-              />
-              <CategoryCard 
-                category="Behavioral Prep" 
-                icon="fa-comments" 
-                desc="Answering soft skills, leadership, and situational questions."
-                color="hover:border-emerald-500/50"
-                onStart={() => handleStartSetupInterview("Behavioral Prep")}
-              />
-              <CategoryCard 
-                category="Executive Prep" 
-                icon="fa-briefcase" 
-                desc="For manager, director, and C-suite leadership roles."
-                color="hover:border-amber-500/50"
-                onStart={() => handleStartSetupInterview("Executive Prep")}
-              />
-              <CategoryCard 
-                category="General Mock" 
-                icon="fa-user-tie" 
-                desc="Standard mock interviews and resume walkthrough prep."
-                color="hover:border-sky-500/50"
-                onStart={() => handleStartSetupInterview("General Mock")}
-              />
-            </>
-          ) : (
-            <>
-              <GenreCard 
-                genre={Genre.FANTASY} 
-                icon="fa-scroll" 
-                desc="Recorded scrolls of high magic."
-                color="hover:border-emerald-500/50"
-                onStart={() => handleStartSetup(Genre.FANTASY)}
-              />
-              <GenreCard 
-                genre={Genre.SCIFI} 
-                icon="fa-microchip" 
-                desc="Encrypted logs from the far future."
-                color="hover:border-indigo-500/50"
-                onStart={() => handleStartSetup(Genre.SCIFI)}
-              />
-              <GenreCard 
-                genre={Genre.MYSTERY} 
-                icon="fa-folder-open" 
-                desc="Classified case files and enigmas."
-                color="hover:border-slate-500/50"
-                onStart={() => handleStartSetup(Genre.MYSTERY)}
-              />
-              <GenreCard 
-                genre={Genre.HORROR} 
-                icon="fa-book-dead" 
-                desc="Banned journals of the occult."
-                color="hover:border-orange-500/50"
-                onStart={() => handleStartSetup(Genre.HORROR)}
-              />
-            </>
-          )}
+          <CategoryCard 
+            category="Technical Prep" 
+            icon="fa-laptop-code" 
+            desc="Diving deep into code, system design, and algorithms."
+            color="hover:border-indigo-500/50"
+            onStart={() => handleStartSetupInterview("Technical Prep")}
+          />
+          <CategoryCard 
+            category="Behavioral Prep" 
+            icon="fa-comments" 
+            desc="Answering soft skills, leadership, and situational questions."
+            color="hover:border-emerald-500/50"
+            onStart={() => handleStartSetupInterview("Behavioral Prep")}
+          />
+          <CategoryCard 
+            category="Executive Prep" 
+            icon="fa-briefcase" 
+            desc="For manager, director, and C-suite leadership roles."
+            color="hover:border-amber-500/50"
+            onStart={() => handleStartSetupInterview("Executive Prep")}
+          />
+          <CategoryCard 
+            category="General Mock" 
+            icon="fa-user-tie" 
+            desc="Standard mock interviews and resume walkthrough prep."
+            color="hover:border-sky-500/50"
+            onStart={() => handleStartSetupInterview("General Mock")}
+          />
         </div>
       </div>
     </div>
@@ -288,6 +183,9 @@ const App: React.FC = () => {
               setCurrentJob(extra.currentJob);
               setAppliedJob(extra.appliedJob);
               setAnswerLength(extra.answerLength);
+              setEnglishLevel(extra.englishLevel);
+              setCurrentSalary(extra.currentSalary);
+              setExpectedSalary(extra.expectedSalary);
             }
             setSetupConfig(config);
             setViewMode(ViewMode.ADVENTURE);
@@ -307,6 +205,9 @@ const App: React.FC = () => {
             currentJobDescription={currentJob}
             appliedJobDescription={appliedJob}
             answerLength={answerLength}
+            englishLevel={englishLevel}
+            currentSalary={currentSalary}
+            expectedSalary={expectedSalary}
             language={setupConfig?.language || 'English'}
             voice={setupConfig?.voice || 'Zephyr'}
             category={selectedCategory}
@@ -358,7 +259,14 @@ interface SetupViewProps {
   onBack: () => void;
   onConfirm: (
     config: AdventureConfig, 
-    extra?: { currentJob: string; appliedJob: string; answerLength: 'short' | 'detailed' }
+    extra?: { 
+      currentJob: string; 
+      appliedJob: string; 
+      answerLength: 'short' | 'detailed';
+      englishLevel: 'easy' | 'normal' | 'fluent';
+      currentSalary: string;
+      expectedSalary: string;
+    }
   ) => void;
 }
 
@@ -395,6 +303,18 @@ const SetupView: React.FC<SetupViewProps> = ({ genre, category, origin, onBack, 
 
   const [localAnswerLen, setLocalAnswerLen] = useState<'short' | 'detailed'>('detailed');
 
+  const [localEnglishLevel, setLocalEnglishLevel] = useState<'easy' | 'normal' | 'fluent'>(() => {
+    return (localStorage.getItem('storyscape_english_level') as any) || 'normal';
+  });
+
+  const [localCurrentSalary, setLocalCurrentSalary] = useState(() => {
+    return localStorage.getItem('storyscape_current_salary') || '$80,000 / year';
+  });
+
+  const [localExpectedSalary, setLocalExpectedSalary] = useState(() => {
+    return localStorage.getItem('storyscape_expected_salary') || '$110,000 / year';
+  });
+
   const toggleCurrentJobLock = () => {
     const nextVal = !currentJobLocked;
     setCurrentJobLocked(nextVal);
@@ -429,6 +349,21 @@ const SetupView: React.FC<SetupViewProps> = ({ genre, category, origin, onBack, 
         localStorage.setItem('storyscape_applied_job', val);
       }
     }
+  };
+
+  const handleEnglishLevelChange = (val: 'easy' | 'normal' | 'fluent') => {
+    setLocalEnglishLevel(val);
+    localStorage.setItem('storyscape_english_level', val);
+  };
+
+  const handleCurrentSalaryChange = (val: string) => {
+    setLocalCurrentSalary(val);
+    localStorage.setItem('storyscape_current_salary', val);
+  };
+
+  const handleExpectedSalaryChange = (val: string) => {
+    setLocalExpectedSalary(val);
+    localStorage.setItem('storyscape_expected_salary', val);
   };
 
   return (
@@ -537,6 +472,62 @@ const SetupView: React.FC<SetupViewProps> = ({ genre, category, origin, onBack, 
                   </button>
                 </div>
               </div>
+
+              <div className="space-y-4">
+                <label className="text-[10px] uppercase font-black opacity-40 ml-2 tracking-widest">AI English Vocabulary Style</label>
+                <div className="grid grid-cols-3 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => handleEnglishLevelChange('easy')}
+                    className={`p-4 rounded-2xl border transition-all flex flex-col items-center gap-1 ${localEnglishLevel === 'easy' ? 'bg-white text-black border-white shadow-lg' : 'bg-white/5 border-white/10 opacity-60 text-white'}`}
+                  >
+                    <span className="text-xs font-black uppercase">Easy 🌱</span>
+                    <span className="text-[9px] opacity-65">Simple english words</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleEnglishLevelChange('normal')}
+                    className={`p-4 rounded-2xl border transition-all flex flex-col items-center gap-1 ${localEnglishLevel === 'normal' ? 'bg-white text-black border-white shadow-lg' : 'bg-white/5 border-white/10 opacity-60 text-white'}`}
+                  >
+                    <span className="text-xs font-black uppercase">Normal 💬</span>
+                    <span className="text-[9px] opacity-65">Standard professional</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleEnglishLevelChange('fluent')}
+                    className={`p-4 rounded-2xl border transition-all flex flex-col items-center gap-1 ${localEnglishLevel === 'fluent' ? 'bg-white text-black border-white shadow-lg' : 'bg-white/5 border-white/10 opacity-60 text-white'}`}
+                  >
+                    <span className="text-xs font-black uppercase">Fluent ⚡</span>
+                    <span className="text-[9px] opacity-65">Eloquence & advanced vocabulary</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <label className="text-[10px] uppercase font-black opacity-40 ml-2 tracking-widest">Compensation details (For Salary negotiation)</label>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-[9px] uppercase font-bold opacity-30 ml-1 tracking-widest">Current Salary</label>
+                    <input 
+                      type="text"
+                      value={localCurrentSalary}
+                      onChange={e => handleCurrentSalaryChange(e.target.value)}
+                      placeholder="E.g. $80,000 / year"
+                      className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-3.5 outline-none focus:border-white/30 transition-all text-xs text-white"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[9px] uppercase font-bold opacity-30 ml-1 tracking-widest">Expected Salary</label>
+                    <input 
+                      type="text"
+                      value={localExpectedSalary}
+                      onChange={e => handleExpectedSalaryChange(e.target.value)}
+                      placeholder="E.g. $110,000 / year"
+                      className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-3.5 outline-none focus:border-white/30 transition-all text-xs text-white"
+                    />
+                  </div>
+                </div>
+              </div>
             </>
           ) : (
             <>
@@ -618,7 +609,14 @@ const SetupView: React.FC<SetupViewProps> = ({ genre, category, origin, onBack, 
           <button 
             onClick={() => onConfirm(
               { genre: genre || Genre.SCIFI, topic, language, voice, mode, durationMinutes: origin === 'files' ? duration : undefined },
-              origin === 'interviewee' ? { currentJob: localCurrentJob, appliedJob: localAppliedJob, answerLength: localAnswerLen } : undefined
+              origin === 'interviewee' ? { 
+                currentJob: localCurrentJob, 
+                appliedJob: localAppliedJob, 
+                answerLength: localAnswerLen,
+                englishLevel: localEnglishLevel,
+                currentSalary: localCurrentSalary,
+                expectedSalary: localExpectedSalary
+              } : undefined
             )} 
             className="flex-[2] py-5 rounded-3xl bg-white text-black text-xs font-black uppercase tracking-widest hover:scale-[1.02] transition-all shadow-2xl"
           >
