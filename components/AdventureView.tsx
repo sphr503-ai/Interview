@@ -57,6 +57,7 @@ const AdventureView: React.FC<AdventureViewProps> = ({ config, onExit, initialHi
   const [currentUserText, setCurrentUserText] = useState('');
   const [textChoice, setTextChoice] = useState('');
   const [inputMode, setInputMode] = useState<InputMode>('text');
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isMuted, setIsMuted] = useState(false);
   const [ambientVolume, setAmbientVolume] = useState(0.25);
@@ -203,12 +204,12 @@ const AdventureView: React.FC<AdventureViewProps> = ({ config, onExit, initialHi
   useEffect(() => {
     inputModeRef.current = inputMode;
     if (serviceRef.current) {
-      serviceRef.current.setMicActive(inputMode === 'mic').catch(err => {
+      serviceRef.current.setMicActive(inputMode === 'mic' && isSpeaking).catch(err => {
         setError("Could not enable microphone.");
         setInputMode('text');
       });
     }
-  }, [inputMode]);
+  }, [inputMode, isSpeaking]);
 
   useEffect(() => {
     if (ambientAudioRef.current) {
@@ -427,56 +428,86 @@ const AdventureView: React.FC<AdventureViewProps> = ({ config, onExit, initialHi
           )}
         </div>
 
-        <div className="p-6 md:p-8 glass border-t border-white/5 flex flex-col gap-4 bg-black/20">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-6">
-              <div className="flex items-center gap-4">
-                 <div className={`w-3 h-3 rounded-full ${isOutputActive ? 'bg-green-500 shadow-[0_0_10px_#22c55e]' : 'bg-red-500 shadow-[0_0_10px_#ef4444]'}`}></div>
-                 <div>
-                  <span className="text-xs uppercase tracking-[0.2em] font-bold opacity-80 block">{isOutputActive ? 'Narrator: Speaking' : 'Narrator: Silent'}</span>
-                 </div>
-              </div>
-              <div className="h-8 w-px bg-white/10"></div>
-              <div className="flex items-center gap-4">
-                 <div className={`w-3 h-3 rounded-full ${isInputActive ? 'bg-blue-500 shadow-[0_0_10px_#3b82f6]' : 'bg-white/10'}`}></div>
-                 <div>
-                  <span className="text-xs uppercase tracking-[0.2em] font-bold opacity-80 block">{inputMode === 'mic' ? (isInputActive ? 'Microphone: Capturing' : 'Microphone: Listening') : 'Input: Text Only'}</span>
-                 </div>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-3">
-              <button 
-                onClick={(e) => { e.stopPropagation(); toggleInputMode(); }} 
-                className={`flex items-center gap-3 px-6 py-3 rounded-full border transition-all ${inputMode === 'mic' ? 'bg-blue-500 border-blue-400 text-white shadow-[0_0_20px_rgba(59,130,246,0.4)]' : 'bg-white/5 border-white/10 text-white/40'}`}
-              >
-                <i className={`fas ${inputMode === 'mic' ? 'fa-microphone' : 'fa-keyboard'}`}></i>
-                <span className="text-[10px] font-black uppercase tracking-widest">{inputMode === 'mic' ? 'Mic Mode' : 'Text Mode'}</span>
-              </button>
-              <button onClick={(e) => { e.stopPropagation(); togglePause(); }} className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${isPaused ? 'bg-green-500 text-white' : 'glass hover:bg-white/10'}`}><i className={`fas ${isPaused ? 'fa-play' : 'fa-pause'}`}></i></button>
-            </div>
-          </div>
-
+        <div className="p-6 md:p-8 glass border-t border-white/5 bg-black/20 z-20">
           {inputMode === 'text' ? (
-            <form onSubmit={handleTextSubmit} onClick={e => e.stopPropagation()} className="relative flex items-center gap-2">
+            <form onSubmit={handleTextSubmit} onClick={e => e.stopPropagation()} className="relative flex items-center gap-3">
+              {/* Input Mode Toggle Button */}
+              <button
+                type="button"
+                onClick={() => setInputMode('mic')}
+                title="Switch to Microphone Input"
+                className="w-12 h-12 rounded-2xl flex items-center justify-center bg-white/5 border border-white/10 text-white/40 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all flex-shrink-0"
+              >
+                <i className="fas fa-microphone text-sm"></i>
+              </button>
+
               <input 
                 type="text" 
                 value={textChoice} 
                 onChange={(e) => setTextChoice(e.target.value)} 
                 disabled={isPaused} 
                 placeholder={isPaused ? "Paused..." : "Type your command and press Enter..." } 
-                className="flex-1 bg-white/5 border border-white/10 rounded-2xl px-6 py-4 outline-none transition-all text-sm disabled:opacity-30 focus:border-white/30" 
+                className="flex-1 bg-white/5 border border-white/10 rounded-2xl px-6 py-3.5 outline-none transition-all text-sm disabled:opacity-30 focus:border-white/30" 
               />
-              <button type="submit" disabled={!textChoice.trim() || isPaused} className={`px-6 py-4 rounded-2xl font-bold uppercase tracking-widest text-[10px] transition-all ${textChoice.trim() && !isPaused ? 'bg-white text-black shadow-lg hover:scale-105' : 'bg-white/5 text-white/20'}`}>Send Choice</button>
+
+              <button 
+                type="submit" 
+                disabled={!textChoice.trim() || isPaused} 
+                className={`px-6 py-3.5 rounded-2xl font-bold uppercase tracking-widest text-[10px] transition-all ${
+                  textChoice.trim() && !isPaused 
+                    ? 'bg-white text-black shadow-lg hover:scale-105' 
+                    : 'bg-white/5 text-white/20 cursor-not-allowed'
+                }`}
+              >
+                Send Choice
+              </button>
             </form>
           ) : (
-            <div className="flex items-center justify-center py-4 bg-blue-500/5 border border-blue-500/10 rounded-2xl animate-pulse">
-              <div className="flex flex-col items-center gap-2">
-                 <div className="flex items-center gap-3">
-                    <span className="w-2 h-2 bg-blue-500 rounded-full animate-ping"></span>
-                    <span className="text-xs font-black uppercase tracking-widest text-blue-400">Recording Choice...</span>
-                 </div>
-                 <p className="text-[10px] opacity-40 uppercase tracking-widest font-bold">Speak clearly, the Narrator is listening</p>
+            <div className="flex items-center gap-3 animate-in fade-in duration-300">
+              {/* Input Mode Toggle Button */}
+              <button
+                type="button"
+                onClick={() => {
+                  setInputMode('text');
+                  setIsSpeaking(false);
+                }}
+                title="Switch to Keyboard Input"
+                className="w-12 h-12 rounded-2xl flex items-center justify-center bg-white/5 border border-white/10 text-white/40 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all flex-shrink-0"
+              >
+                <i className="fas fa-keyboard text-sm"></i>
+              </button>
+
+              <div className="flex-1 flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsSpeaking(true)}
+                  disabled={isSpeaking}
+                  className={`flex-1 py-3.5 px-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all flex items-center justify-center gap-2 ${
+                    isSpeaking
+                      ? 'bg-blue-500/10 text-blue-500/40 border border-blue-500/5 cursor-not-allowed'
+                      : 'bg-blue-600 hover:bg-blue-500 text-white shadow-[0_0_15px_rgba(59,130,246,0.4)] hover:scale-[1.02]'
+                  }`}
+                >
+                  <span className="relative flex h-2 w-2">
+                    <span className={`absolute inline-flex h-full w-full rounded-full bg-current ${isSpeaking ? 'animate-ping' : ''}`}></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-current"></span>
+                  </span>
+                  <span>Start Speaking 🎙️</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setIsSpeaking(false)}
+                  disabled={!isSpeaking}
+                  className={`flex-1 py-3.5 px-4 rounded-full font-black uppercase tracking-widest text-[10px] transition-all flex items-center justify-center gap-2 ${
+                    !isSpeaking
+                      ? 'bg-red-500/10 text-red-500/40 border border-red-500/5 cursor-not-allowed'
+                      : 'bg-red-600 hover:bg-red-500 text-white shadow-[0_0_15px_rgba(239,68,68,0.2)] animate-pulse hover:scale-[1.02]'
+                  }`}
+                >
+                  <i className="fas fa-microphone-slash text-[11px]"></i>
+                  <span>Stop Speaking 🛑</span>
+                </button>
               </div>
             </div>
           )}
